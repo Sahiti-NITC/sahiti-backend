@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script bis_use="true" type="text/javascript" charset="utf-8"com ></script>
+    <title>Alumni Api's CSEA</title>
+    <link href="../css/styles.css" rel="stylesheet">
+    <link href="../css/loginbox.css" rel="stylesheet">
+  </head>
+
+    <header>
+        <div class="header">
+            <h3>Alumni Affairs Management - CSEA</h3>
+        </div>
+    </header>
+    <body>
+        <main>
+            <div class="login-page">
+                <div class="login-form-container">
+                <div class="form">
+
+                    <!-- Registration Form -->
+                    <form class="register-form" id="register-form" action="/api/alumni/register" method="post">
+                    <input type="text" id="username" name="username" placeholder="New Username" />
+                    <input type="password" id="password" name="password" placeholder="New Password" />
+                    <input type="text" id="name" name="name" placeholder="Name" />
+                    <input type="number" id="graduationYear" name="graduationYear" placeholder="Graduation Year" />
+                    <input type="text" id="contactNumber" name="contactNumber" placeholder="Contact Number" />
+                    <input type="email" id="email" name="email" placeholder="Email" />
+                    <input type="text" id="currentJob" name="currentJob" placeholder="Current Job" />
+                    <button id="registerButton" type="submit">Register</button>
+                    </form> 
+
+                    <a href="./"><button>Back to login</button></a>
+            
+                </div>
+                </div>
+            </div> 
+        </main>
+    </body>
+</html>
