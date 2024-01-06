@@ -110,6 +110,10 @@ app.post("/register", function(req, res){
 });
 
 
+app.post("/test", function(req, res){
+  console.log("TEST");
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
     });
