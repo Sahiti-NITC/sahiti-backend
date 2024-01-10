@@ -1,25 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const path = require('path');
 const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const GoogleStrategy = require('passport-google-oauth20').Strategy; 
-const passportLocalMongoose = require('passport-local-mongoose');
-const bodyParser = require('body-parser');
-const session = require('express-session');  
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const session = require('express-session');
 const Alumni = require('./public/models/user');
 const config = require('./config.json');
 
-const app = express(); 
+const app = express();
 
 app.set('view engine', 'ejs');
-app.use(express.static(path.join(__dirname, 'public', 'views')));
-app.use(express.json());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(session({
-  secret: 'natsIsSoCoolOmgLmaoYouHaveNoClue',  
+  secret: 'config.sessionSecret',
   resave: false,
   saveUninitialized: false,
 }));
@@ -40,80 +31,102 @@ db.once('open', () => {
   console.log('Connected to MongoDB');
 });
 
-passport.use(new LocalStrategy(Alumni.authenticate()));
+passport.use(new GoogleStrategy({
+  clientID: config.google.clientID,
+  clientSecret: config.google.clientSecret,
+  callbackURL: config.google.callbackURL,
+},
+(accessToken, refreshToken, profile, done) => {
+  Alumni.findOne({ 'sahitiID': profile.id }, (err, user) => {
+    if (err) {
+      return done(err);
+    }
+    if (!user) {
+      const newUser = new Alumni({
+        sahitiID: profile.id,
+        name: profile.displayName,
+        college: '', 
+        contactNumber: '', 
+      });
+
+      newUser.save((err) => {
+        if (err) {
+          return done(err);
+        }
+        return done(null, newUser);
+      });
+    } else {
+      return done(null, user);
+    }
+  });
+}));
 
 passport.serializeUser(Alumni.serializeUser());
 passport.deserializeUser(Alumni.deserializeUser());
 
-passport.use(new GoogleStrategy({
-  clientID: 'your-google-client-id',
-  clientSecret: 'your-google-client-secret',
-  callbackURL: 'your-callback-url',
-},
-(accessToken, refreshToken, profile, done) => {
-  // Check if the user already exists in your database
-  // If not, create a new user based on the Google profile information
-  // Call done() with the user object
-}));
+const isAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/login');
+};
 
-
-app.get("/login", function(req, res){
-    try {
-        res.render('./login');
-      } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-      }
+// Routes
+app.get('/login', (req, res) => {
+  res.render('login');
 });
+
+app.post('/login',
+  passport.authenticate('local', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/dashboard'); 
+  }
+);
 
 app.get('/login/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
 app.get('/login/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    res.redirect('<IDK>');
+    res.redirect('/register');
   }
 );
 
-app.get('/logout. ',async (req, res) => {
+app.get('/logout', (req, res) => {
   req.logout();
-  res.redirect('/login');
+  res.redirect('/');
 });
 
-app.post("/login", function(req, res){
-
+app.get('/register', isAuthenticated, (req, res) => {
+  res.render('register');
 });
 
-app.get("/register", function(req, res){
-    try {
-        res.render('./register');
-      } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
-      }
-});
+app.post('/register', isAuthenticated, (req, res) => {
+  const { college, contactNumber } = req.body;
 
-app.post("/register", function(req, res){
-  const { username, password } = req.body;
-  User.register(new User({ username: username }), password, function(err, user){
-      if(err){
-          console.log(err);
-          res.redirect("/register");
-      } else {
-          passport.authenticate("local")(req, res, function(){
-              res.redirect("<IDK YET>");
-          });
-      }
+  const user = req.user;
+
+  user.college = college;
+  user.contactNumber = contactNumber;
+
+  user.save((err) => {
+    if (err) {
+      console.log(err);
+      res.redirect('/register');
+    } else {
+      res.redirect('/dashboard'); 
+    }
   });
 });
 
-
-app.post("/test", function(req, res){
-  console.log("TEST");
+app.get('/test', isAuthenticated, (req, res) => {
+  console.log('TEST');
+  res.send('Test route');
 });
 
+const port = 3000;
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-    });
+  console.log(`Server is running on port ${port}`);
+});
