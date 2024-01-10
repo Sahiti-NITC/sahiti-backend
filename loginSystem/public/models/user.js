@@ -11,6 +11,6 @@ const userSchema = new mongoose.Schema({
   sahitiID: { type: Number, unique: true, required: true }, 
 });
 
-alumniSchema.plugin(passportLocalMongoose);
+userSchema.plugin(passportLocalMongoose);
 
 module.exports = mongoose.model('User', userSchema);

@@ -3,12 +3,15 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
-const Alumni = require('./public/models/user');
+const User = require('./public/models/user');
 const config = require('./config.json');
 
 const app = express();
 
 app.set('view engine', 'ejs');
+app.set('view engine', 'ejs');
+app.set('views', './public/views');
+
 app.use(session({
   secret: 'config.sessionSecret',
   resave: false,
@@ -36,33 +39,31 @@ passport.use(new GoogleStrategy({
   clientSecret: config.google.clientSecret,
   callbackURL: config.google.callbackURL,
 },
-(accessToken, refreshToken, profile, done) => {
-  Alumni.findOne({ 'sahitiID': profile.id }, (err, user) => {
-    if (err) {
-      return done(err);
-    }
+async (accessToken, refreshToken, profile) => {
+  try {
+    const user = await User.findOne({ 'sahitiID': profile.id });
+
     if (!user) {
-      const newUser = new Alumni({
+      const newUser = new User({
         sahitiID: profile.id,
         name: profile.displayName,
         college: '', 
         contactNumber: '', 
       });
 
-      newUser.save((err) => {
-        if (err) {
-          return done(err);
-        }
-        return done(null, newUser);
-      });
+      await newUser.save();
+      return newUser;
     } else {
-      return done(null, user);
+      return user;
     }
-  });
+  } catch (err) {
+    throw err;
+  }
 }));
 
-passport.serializeUser(Alumni.serializeUser());
-passport.deserializeUser(Alumni.deserializeUser());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 const isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
