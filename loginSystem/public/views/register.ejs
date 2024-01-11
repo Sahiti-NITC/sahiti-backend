@@ -5,15 +5,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register Page</title>
+  <style>
+    /* Add some CSS to style the form as needed */
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    input[disabled] {
+      background-color: #f0f0f0; /* Gray out disabled input fields */
+    }
+  </style>
 </head>
 <body>
   <h1>Register Page</h1>
   <form action="/register" method="post">
     <label for="college">College:</label>
-    <input type="text" id="college" name="college" required>
+    <input type="text" id="college" name="college" required<%= user.NITC ? ' disabled' : '' %>>
     <br>
     <label for="contactNumber">Contact Number:</label>
     <input type="text" id="contactNumber" name="contactNumber" required>
+    <br>
+    <label for="nitc">NITC:</label>
+    <select id="nitc" name="nitc" required>
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
     <br>
     <button type="submit">Register</button>
   </form>
